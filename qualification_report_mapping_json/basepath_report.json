@@ -6,7 +6,7 @@
         "Base Path"
     ],
     "info_block": {
-        "text": "<b>Basepath Report</b>\nThis report lists all the proxy basepaths in each Apigee Organization and Environment.",
+        "text": "<b>Basepath Report\nThis report lists all the proxy basepaths in each Apigee Organization and Environment.",
         "start_row": 2,
         "end_row": 5,
         "col_merge": 2,
