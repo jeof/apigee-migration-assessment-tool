@@ -36,6 +36,7 @@ from qualification_report_mapping.header_mapping import (
     org_resourcefiles,
     api_traffic_mapping, # New import
     validation_report,
+    basepath_report_mapping,
 )
 from qualification_report_mapping.report_summary import report_summary
 from base_logger import logger
@@ -1085,6 +1086,39 @@ class QualificationReport():  # noqa pylint: disable=R0902,R0904
         # Info block
         self.qualification_report_info_box(
             api_traffic_mapping, api_traffic_sheet)
+
+    def report_basepaths(self):
+        """Generates the "Basepath Report" sheet."""
+        logger.info(
+            '------------------- Basepath Report -----------------------')
+        basepath_report_sheet = self.workbook.add_worksheet(
+            name='Basepath Report')
+
+        # Headings
+        self.qualification_report_heading(
+            basepath_report_mapping["headers"], basepath_report_sheet)
+
+        row = 1
+
+        for env, env_data in self.export_data['envConfig'].items():
+            for proxy, deployments in env_data.get('apis', {}).items():
+                if proxy in self.export_data['proxy_dependency_map']:
+                    base_paths = self.export_data['proxy_dependency_map'][proxy].get('qualification', {}).get('base_paths', [])
+                    for base_path in base_paths:
+                        col = 0
+                        basepath_report_sheet.write(row, col, self.org_name)
+                        col += 1
+                        basepath_report_sheet.write(row, col, env)
+                        col += 1
+                        basepath_report_sheet.write(row, col, proxy)
+                        col += 1
+                        basepath_report_sheet.write(row, col, base_path)
+                        row += 1
+
+        basepath_report_sheet.autofit()
+        # Info block
+        self.qualification_report_info_box(
+            basepath_report_mapping, basepath_report_sheet)
 
     def report_network_topology(self):
         """Generates the "Apigee (4G) components" report sheet (Topology)."""

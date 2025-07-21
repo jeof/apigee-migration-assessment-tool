@@ -66,3 +66,5 @@ api_traffic_mapping = parse_json(
     "./qualification_report_mapping_json/api_traffic.json")
 validation_report = parse_json(
     "./qualification_report_mapping_json/validation_report.json")
+basepath_report_mapping = parse_json(
+    "./qualification_report_mapping_json/basepath_report.json")
