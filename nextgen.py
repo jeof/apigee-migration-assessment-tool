@@ -25,6 +25,7 @@ from google.cloud import resourcemanager_v3  # pylint: disable=E0401
 from google.oauth2.credentials import Credentials  # pylint: disable=E0401
 from utils import parse_json
 from rest import RestClient
+from base_logger import logger
 
 class ApigeeNewGen():   # noqa pylint: disable=R0902
     """A client for interacting with Apigee X or hybrid.
@@ -387,3 +388,50 @@ class ApigeeNewGen():   # noqa pylint: disable=R0902
         ]
         api_object = self.client.file_post(url, params, None, files)
         return api_object
+
+    def get_api_proxy_traffic(self, env_name, start_date, end_date):
+        """Retrieves API proxy traffic data for a specific environment.
+
+        Args:
+            env_name (str): The name of the environment.
+            start_date (str): The starting date of the time range (MM/DD/YYYY).
+            end_date (str): The ending date of the time range (MM/DD/YYYY)
+
+        Returns:
+            dict: A dictionary of traffic data for API proxies, keyed by
+                  proxy name. Returns an empty dict if no data or an error
+                  occurs.
+        """
+        logger.info(f"Fetching API proxy traffic for environment '{env_name}' from '{start_date}' to '{end_date}'")
+        url = (f"{self.baseurl}/organizations/{self.project_id}/environments/{env_name}/stats/apiproxy?"
+               f"select=sum(message_count)&timeRange={start_date}%2000:00~{end_date}%2023:59&timeUnit=day")
+
+        try:
+            traffic_data = self.client.get(url)
+            if (traffic_data and 'environments' in traffic_data and traffic_data['environments']):
+                proxy_traffic_dict = {}
+                for env_data in traffic_data['environments']:
+                    for dimension in env_data.get('dimensions', []):
+                        proxy_name = dimension.get('name')
+                        if not proxy_name:
+                            continue
+                        total_message_count = 0
+                        for metric in dimension.get('metrics', []):
+                            if metric.get('name') == 'sum(message_count)':
+                                for value_entry in metric.get('values', []):
+                                    try:
+                                        # Value can be a float string like "7.0"
+                                        count = int(float(value_entry.get('value', 0)))
+                                        total_message_count += count
+                                    except (ValueError, TypeError):
+                                        logger.warning(f"Could not parse traffic value for proxy '{proxy_name}': {value_entry.get('value')}")
+                        proxy_traffic_dict[proxy_name] = {
+                            'proxy_name': proxy_name,
+                            'total_traffic': total_message_count
+                        }
+                return proxy_traffic_dict
+            logger.info("No API traffic data returned from the API.")
+            return {}
+        except Exception as e:
+            logger.error(f"Error fetching or parsing API proxy traffic for {env_name}: {e}", exc_info=True)
+            return {}

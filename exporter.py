@@ -424,7 +424,7 @@ class ApigeeExporter():  # pylint: disable=R0902
         end_date = cfg.get('inputs', 'ANALYTICS_END_DATE')
 
         for env in self.export_data.get('envConfig', {}):
-            if self.apigee_type == 'edge':  # Only for classic Edge
+            # if self.apigee_type == 'edge':  # Only for classic Edge
                 # Ensure we have the list of deployed APIs for the environment
 
                 # Get traffic data only for proxies that have traffic
@@ -444,8 +444,8 @@ class ApigeeExporter():  # pylint: disable=R0902
                         all_proxies_traffic_data[proxy_name] = traffic_info
 
                     self.export_data['envConfig'][env]['api_traffic'] = all_proxies_traffic_data
-            else:
-                logger.info(f"Skipping API traffic export for Apigee X/Hybrid environment '{env}' as it's not directly supported via this tool's current analytics integration.")
+            # else:
+            #     logger.info(f"Skipping API traffic export for Apigee X/Hybrid environment '{env}' as it's not directly supported via this tool's current analytics integration.")
 
     def create_export_state(self, export_dir):
         """Creates the export state by writing data to JSON files.
